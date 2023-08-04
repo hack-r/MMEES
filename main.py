@@ -98,6 +98,7 @@ class ScrapeProcess(object):
                 "engine": engine,
                 "num": 100,
                 "api_key": api_key,
+                'async': True,  # for async requests
             }
             if engine == "bing":
                 params["cc"] = "US"
@@ -175,22 +176,25 @@ class ScrapeProcess(object):
                 self.csvfile.flush()
 
         if args.N:
+            if len(html) > 100000:
+                print("Text too long for NLP, skipping...")
+
             for entity, label in entities.items():
-                if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
-                    continue
-                if label == "PERSON" and not re.match(r'\w+ \w+', entity):
-                    continue
-                if label == "PERSON":
-                    name_parts = entity.split()
-                    if len(name_parts) in [2, 3] and name_parts[0].lower() in first_names:
-                        if len(name_parts) == 3:
-                            # Check if the second part is a middle initial
-                            if re.fullmatch(r"[A-Z]\.", name_parts[1]):
+                    if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
+                        continue
+                    if label == "PERSON" and not re.match(r'\w+ \w+', entity):
+                        continue
+                    if label == "PERSON":
+                        name_parts = entity.split()
+                        if len(name_parts) in [2, 3] and name_parts[0].lower() in first_names:
+                            if len(name_parts) == 3:
+                                # Check if the second part is a middle initial
+                                if re.fullmatch(r"[A-Z]\.", name_parts[1]):
+                                    print(f'Found entity: {entity} ({label})')
+                                    self.entities[entity] = (label, page['title'], page['link'])
+                            else:
                                 print(f'Found entity: {entity} ({label})')
                                 self.entities[entity] = (label, page['title'], page['link'])
-                        else:
-                            print(f'Found entity: {entity} ({label})')
-                            self.entities[entity] = (label, page['title'], page['link'])
 
     def post_process(self):
         results = {}
