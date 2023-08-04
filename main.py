@@ -115,7 +115,7 @@ class ScrapeProcess(object):
                 "engine": engine,
                 "num": 100,
                 "api_key": api_key,
-                'async': True,  # for async requests
+                # 'async': True,  # for async requests
             }
             if engine == "bing":
                 params["cc"] = "US"
@@ -164,6 +164,7 @@ class ScrapeProcess(object):
         emails = re.findall(r'([A-Za-z0-9.\\+_-]+@[A-Za-z0-9\\._-]+\\.[a-zA-Z]*)', text)
         phones = re.findall(r'\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b', text)
 
+        entities = {}
         if len(text) > 100000:
             print("Text too long for NLP, skipping...")
         else:
