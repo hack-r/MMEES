@@ -43,7 +43,7 @@ python -m spacy download en_core_web_sm
 The script can be run from the command line with a number of arguments:
 
 ```
-python scraper.py -query 'your search query' -pages 5 -e 'engine'
+python main.py -query "OpenAI" -pages 2 -o "openai_info.csv" -e "american" -PP -Ng
 ```
 
 Here are the available options:
@@ -66,6 +66,8 @@ It is **HIGHLY recommended** to use the "-PP" option. Results are written in "lo
 If you're interested in other Spacy entity types it is a trivial edit to cut out the lines where I've removed them.
 
 Storage of your Serp API key in a .env file is supported.
+
+Spacy's "PERSON" entity type seemed extremely unreliable for this type of data, so I created a list of the top 800 most common first names and used that for filtering. I did the same with US area codes.
 
 ## License
 
