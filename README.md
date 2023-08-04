@@ -2,7 +2,7 @@
 # MMEES Scraper
 
 <div align="center">
-  <img src="./MMEES.png" alt="Image Alt Text" width="width: 320px; height: 180px;">
+  <img src="./MMEES.png" alt="Image Alt Text" width="width: 160px; height: 90px;">
 </div>
 
 A FOSS lead scraping tool developed by:
