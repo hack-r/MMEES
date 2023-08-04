@@ -1,1 +1,0 @@
-python main.py -query "OpenAI" -pages 2 -o "openai_info.csv" -e "all" -E -P -N
