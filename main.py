@@ -3,6 +3,7 @@ import csv
 import os
 import re
 import threading
+from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.request import Request, urlopen
 
@@ -135,11 +136,18 @@ class ScrapeProcess(object):
             print(f'Could not scrape page: {page["link"]} due to {e}')
             return
 
-        emails = re.findall(r'([A-Za-z0-9.\\+_-]+@[A-Za-z0-9\\._-]+\\.[a-zA-Z]*)', html)
-        phones = re.findall(r'\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b', html)
+        # Remove HTML tags using BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text()
 
-        doc = nlp(html)
-        entities = {ent.text: ent.label_ for ent in doc.ents}
+        emails = re.findall(r'([A-Za-z0-9.\\+_-]+@[A-Za-z0-9\\._-]+\\.[a-zA-Z]*)', text)
+        phones = re.findall(r'\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b', text)
+
+        if len(text) > 100000:
+            print("Text too long for NLP, skipping...")
+        else:
+            doc = nlp(text)
+            entities = {ent.text: ent.label_ for ent in doc.ents}
 
         if args.E:
             for email in emails:
@@ -176,25 +184,22 @@ class ScrapeProcess(object):
                 self.csvfile.flush()
 
         if args.N:
-            if len(html) > 100000:
-                print("Text too long for NLP, skipping...")
-
             for entity, label in entities.items():
-                    if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
-                        continue
-                    if label == "PERSON" and not re.match(r'\w+ \w+', entity):
-                        continue
-                    if label == "PERSON":
-                        name_parts = entity.split()
-                        if len(name_parts) in [2, 3] and name_parts[0].lower() in first_names:
-                            if len(name_parts) == 3:
-                                # Check if the second part is a middle initial
-                                if re.fullmatch(r"[A-Z]\.", name_parts[1]):
-                                    print(f'Found entity: {entity} ({label})')
-                                    self.entities[entity] = (label, page['title'], page['link'])
-                            else:
+                if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
+                    continue
+                if label == "PERSON" and not re.match(r'\w+ \w+', entity):
+                    continue
+                if label == "PERSON":
+                    name_parts = entity.split()
+                    if len(name_parts) in [2, 3] and name_parts[0].lower() in first_names:
+                        if len(name_parts) == 3:
+                            # Check if the second part is a middle initial
+                            if re.fullmatch(r"[A-Z]\.", name_parts[1]):
                                 print(f'Found entity: {entity} ({label})')
                                 self.entities[entity] = (label, page['title'], page['link'])
+                        else:
+                            print(f'Found entity: {entity} ({label})')
+                            self.entities[entity] = (label, page['title'], page['link'])
 
     def post_process(self):
         results = {}
