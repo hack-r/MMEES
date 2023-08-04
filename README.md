@@ -1,6 +1,9 @@
 
 # MMEES Scraper
-![MEES Logo](./MMEES.png)
+
+<div align="center">
+  <img src="./MMEES.png" alt="Image Alt Text" width="width: 320px; height: 180px;">
+</div>
 
 A FOSS lead scraping tool developed by:
 
@@ -15,7 +18,7 @@ Interested in the professional version or custom lead generation? Shoot me an em
 
 MMEES = Miller's Multi-Engine E-mail Scraper. A bit of a misnomer, as it now also scrapes phones, and names.
 
-This tool extracts emails, phone numbers, and named entities from search results across multiple search engines. It supports Google, Bing, DuckDuckGo, Yahoo, Yandex, Baidu, Yelp, Naver, and Google by location (using "glocation").
+This tool extracts emails, phone numbers, and named entities from search results across multiple search engines. It supports Baidu, Bing, DuckDuckGo, Google (with or without location), Naver, Yahoo, Yelp, Yandex.
 
 **Please ensure that you are complying with all relevant policies, laws, and regulations when using this tool. Usage is at your own risk.**
 
@@ -27,6 +30,12 @@ Then, install the dependencies using pip:
 
 ```
 pip install -r requirements.txt
+```
+
+You'll also need to install a Spacy model, if you want to extract names. 
+
+```
+python -m spacy download en_core_web_sm
 ```
 
 ## Usage
