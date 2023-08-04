@@ -14,6 +14,8 @@ https://github.com/hack-r
 
 Interested in the professional version or custom lead generation? Shoot me an email. hello@[my company name] .com
 
+NOTE: Serp API has a **free** plan - 100 searches/month, I believe. I don't work for them, but these engines change so much that if you build a traditional scraper today, it will likely be broken a next week or next month. This is a convenient solution and bypasses IP throttling as well.
+
 ## Description
 
 MMEES = Miller's Multi-Engine E-mail Scraper. A bit of a misnomer, as it now also scrapes phones, and names.
