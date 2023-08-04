@@ -1,37 +1,55 @@
-# Miller's Multi-Engine Email Scraper (MMEES)
 
-This tool scrapes email addresses from all major search engines' results. You can specify the search query, the number of pages of search results to scrape, and the output filename. The tool supports multiple search engines: Google, Bing, DuckDuckGo, Yahoo, Yandex, Baidu, and Yelp. 
+# MMEES Scraper
 
-by Jason M. (https://github.com/hack-r)
+A FOSS lead scraping tool developed by:
 
-SerpAPI does most of the heavy lifting.
+	Jason Miller
+	Libre Agora, LLC. 
 
-## How to Run
+https://github.com/hack-r
 
-1. Clone this repository.
-2. Install the required Python packages: `pip install -r requirements.txt`
-3. Set up your .env file with your SerpAPI key: `SERP_API_KEY=your_api_key`
-4. Run the script: `python scraper.py -query "your search term" -pages 10 -o output.csv -e google`
+Interested in the professional version or custom lead generation? Shoot me an email. hello@[my company name] .com
 
-## Command-Line Arguments
+## Description
 
-- `-query`: The search term to use. Default is "test".
-- `-pages`: The number of search result pages to scrape. Default is 10.
-- `-o`: The output filename. Default is "emails.csv".
-- `-key`: Your SerpAPI key. Default is the key in your .env file.
-- `-P`: Enable post-processing (lowercase and dedupe).
-- `-Eo`: Output only email addresses.
-- `-Ng`: Exclude .gov email addresses.
-- `-e`, `--engine`: The search engine to use (google, bing, duckduckgo, yahoo, yandex, baidu, yelp, all). Default is "google".
+MMEES = Miller's Multi-Engine E-mail Scraper. A bit of a misnomer, as it now also scrapes phones, and names.
 
-It is highly recommended to use "-P", unless your use case is very different from the usual ones and you want to avoid any loss of information.
+This tool extracts emails, phone numbers, and named entities from search results across multiple search engines. It supports Google, Bing, DuckDuckGo, Yahoo, Yandex, Baidu, Yelp, Naver, and Google by location (using "glocation").
 
-## Output Format
+**Please ensure that you are complying with all relevant policies, laws, and regulations when using this tool. Usage is at your own risk.**
 
-The output file is a CSV file with the following columns:
+## Installation
 
-- Page title: The title of the page where the email address was found.
-- Page link: The URL of the page where the email address was found.
-- Email: The email address.
+First, clone the repository and navigate to the project directory.
 
-If the `-Eo` option is used, the output file will contain only the email addresses.
+Then, install the dependencies using pip:
+
+```
+pip install -r requirements.txt
+```
+
+## Usage
+
+The script can be run from the command line with a number of arguments:
+
+```
+python scraper.py -query 'your search query' -pages 5 -e 'engine'
+```
+
+Here are the available options:
+
+* `-E` : Enable email scraping (default: True)
+* `-Eo` : Email only output
+* `-N` : Enable named entity scraping (default: True)
+* `-Ng` : Exclude .gov emails
+* `-P` : Enable phone number scraping (default: True)
+* `-PP` : Enable post-processing (lowercase and dedupe)
+* `-e` : The search engine to use (default: "google"). Options are "google", "bing", "duckduckgo", "yahoo", "yandex", "baidu", "yelp", "naver", "glocation", "all", or "american". The "american" option includes all engines except Baidu, Naver, and Yandex. The "glocation" option uses Google Search by location, with Rockville, MD as the default location.
+* `-key` : Your Serp API key
+* `-o` : Output filename (default: 'emails.csv')
+* `-pages` : Number of search results pages to scrape per engine (default: 2)
+* `-query` : The query to use for the search (default: 'test')
+
+## License
+
+This project is licensed under the terms of the MIT license.
