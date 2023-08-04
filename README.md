@@ -1,5 +1,6 @@
 
 # MMEES Scraper
+![MEES Logo](./MMEES.png)
 
 A FOSS lead scraping tool developed by:
 
