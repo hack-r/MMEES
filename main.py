@@ -3,6 +3,8 @@ import csv
 import os
 import re
 import threading
+import urllib
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.request import Request, urlopen
@@ -65,10 +67,11 @@ class ScrapeProcess(object):
             "yahoo": YahooSearch,
             "yandex": YandexSearch,
             "baidu": BaiduSearch,
-            "yelp": GoogleSearch,
+            # "yelp": GoogleSearch,
             "naver": NaverSearch,
             "glocation": GoogleSearch
         }
+        self.visited_pages = set()
 
     def validate_email(self, email):
         email_regex = re.compile(r'[^@]+@[^@]+\.[^@]+')
@@ -76,6 +79,19 @@ class ScrapeProcess(object):
 
     def get_tld(self, email):
         return email.split('.')[-1]
+
+    def spider_page(self, page, original_domain):
+        soup = BeautifulSoup(page, 'html.parser')
+        for link in soup.find_all('a'):
+            url = link.get('href')
+            # Check that url is not None and is a relative URL or on the same domain
+            if url is not None and (not url.startswith('http') or urllib.parse.urlparse(url).netloc == original_domain):
+                # Construct absolute URL
+                url = urllib.parse.urljoin(page, url)
+                # Avoid visiting the same page twice
+                if url not in self.visited_pages:
+                    self.visited_pages.add(url)
+                    self.process_page(url, original_domain)
 
     def go(self, query, pages, engine):
         load_dotenv()
@@ -111,9 +127,13 @@ class ScrapeProcess(object):
             elif engine == "yelp":
                 params["find_desc"] = query
             elif engine == "glocation":
-                location = GoogleSearch({}).get_location("Rockville, MD", 1)[0]["canonical_name"]
-                params["q"] = query
-                params["location"] = location
+                try:
+                    location = GoogleSearch({}).get_location("Rockville, MD", 1)[0]["canonical_name"]
+                    params["q"] = query
+                    params["location"] = location
+                except IndexError:
+                    print("Could not fetch location. Skipping...")
+                    location = None
             else:
                 params["q"] = query
                 params["start"] = i * 100
@@ -129,7 +149,8 @@ class ScrapeProcess(object):
             print(f'Skipping .gov page: {page["link"]}')
             return
         try:
-            request = Request(page['link'])
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+            request = Request(page['link'], headers=headers)
             html = urlopen(request).read().decode('utf8')
             print(f'Scraping page: {page["link"]}')
         except Exception as e:
@@ -172,6 +193,9 @@ class ScrapeProcess(object):
                         print(f'Found email: {email}')
                         self.emails[email] = (page['title'], page['link'])
                         self.csvfile.flush()
+                    # Spider the page:
+                    self.spider_page(page['link'], urllib.parse.urlparse(page['link']).netloc)
+
         if args.P:
             for phone in phones:
                 # Normalize phone to just digits
