@@ -93,6 +93,9 @@ class ScrapeProcess(object):
                 self.process_page(page)
 
     def process_page(self, page):
+        if self.no_gov and ".gov" in page["link"]:
+            print(f'Skipping .gov page: {page["link"]}')
+            return
         try:
             request = Request(page['link'])
             html = urlopen(request).read().decode('utf8')
@@ -136,13 +139,14 @@ class ScrapeProcess(object):
                 self.csvfile.flush()
         if args.N:
             for entity, label in entities.items():
-                if label in ["DATE", "CARDINAL", "PRODUCT", "GPE"]:
+                if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
                     continue
                 if label == "PERSON" and not re.match(r'\w+ \w+', entity):
                     continue
-                print(f'Found entity: {entity} ({label})')
-                self.entities[entity] = (label, page['title'], page['link'])
-                self.csvfile.flush()
+                if label == "PERSON":
+                    print(f'Found entity: {entity} ({label})')
+                    self.entities[entity] = (label, page['title'], page['link'])
+                    self.csvfile.flush()
 
     def post_process(self):
         results = {}
