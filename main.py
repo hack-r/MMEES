@@ -13,6 +13,36 @@ from serpapi import BingSearch, BaiduSearch, DuckDuckGoSearch, GoogleSearch, Nav
 # Load Spacy English model
 nlp = spacy.load('en_core_web_sm')
 
+# Area codes
+area_codes = [
+    205, 251, 256, 334, 479, 501, 870, 907, 480, 520, 602, 623, 928,
+    209, 213, 310, 323, 408, 415, 510, 530, 559, 562, 619, 626, 650,
+    661, 707, 714, 760, 805, 818, 831, 858, 909, 916, 925, 949, 951,
+    202, 203, 240, 301, 302, 303, 308, 309, 319, 320, 402, 405, 406,
+    407, 408, 409, 410, 412, 413, 414, 415, 417, 419, 423, 424, 425,
+    432, 434, 440, 443, 501, 502, 503, 504, 505, 507, 508, 509, 510,
+    512, 513, 515, 516, 517, 518, 520, 530, 540, 541, 551, 557, 559,
+    561, 562, 563, 567, 570, 571, 573, 574, 575, 580, 585, 586, 601,
+    602, 603, 605, 606, 607, 608, 609, 610, 612, 614, 615, 616, 617,
+    618, 619, 620, 623, 626, 628, 630, 631, 636, 641, 646, 650, 651,
+    657, 660, 661, 662, 667, 669, 678, 681, 682, 701, 702, 703, 704,
+    706, 707, 708, 712, 713, 714, 715, 716, 717, 718, 719, 720, 724,
+    727, 731, 732, 734, 737, 740, 747, 754, 757, 760, 762, 763, 764,
+    765, 769, 770, 772, 773, 774, 775, 779, 781, 785, 786, 787, 801,
+    802, 803, 804, 805, 806, 808, 810, 812, 813, 814, 815, 816, 817,
+    818, 828, 830, 831, 832, 843, 845, 847, 848, 850, 854, 856, 857,
+    858, 859, 860, 862, 863, 864, 865, 866, 870, 878, 901, 903, 904,
+    906, 907, 908, 909, 910, 912, 913, 914, 915, 916, 917, 918, 919,
+    920, 925, 928, 929, 930, 931, 934, 936, 937, 938, 940, 941, 947,
+    949, 951, 952, 954, 956, 959, 970, 971, 972, 973, 978, 979, 980,
+    984, 985, 989
+]
+
+# Names filter
+with open('first_names.txt', 'r') as file:
+    first_names = file.read().lower().split(',')
+
+# Main function
 class ScrapeProcess(object):
     def __init__(self, filename, email_only, no_gov):
         if os.path.isfile(filename):
@@ -105,7 +135,8 @@ class ScrapeProcess(object):
             return
 
         emails = re.findall(r'([A-Za-z0-9.\\+_-]+@[A-Za-z0-9\\._-]+\\.[a-zA-Z]*)', html)
-        phones = re.findall(r'(\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})', html)
+        phones = re.findall(r'\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b', html)
+
         doc = nlp(html)
         entities = {ent.text: ent.label_ for ent in doc.ents}
 
@@ -134,9 +165,15 @@ class ScrapeProcess(object):
                         self.csvfile.flush()
         if args.P:
             for phone in phones:
+                # Normalize phone to just digits
+                phone_digits = re.sub(r'\D', '', phone)
+                area_code = phone_digits[:3]
+                if area_code not in area_codes:
+                    continue
                 print(f'Found phone: {phone}')
                 self.phones[phone] = (page['title'], page['link'])
                 self.csvfile.flush()
+
         if args.N:
             for entity, label in entities.items():
                 if label in ["DATE", "CARDINAL", "PRODUCT", "GPE", "ORG", "LANGUAGE", "MONEY", "NORP", "TIME"]:
@@ -144,9 +181,16 @@ class ScrapeProcess(object):
                 if label == "PERSON" and not re.match(r'\w+ \w+', entity):
                     continue
                 if label == "PERSON":
-                    print(f'Found entity: {entity} ({label})')
-                    self.entities[entity] = (label, page['title'], page['link'])
-                    self.csvfile.flush()
+                    name_parts = entity.split()
+                    if len(name_parts) in [2, 3] and name_parts[0].lower() in first_names:
+                        if len(name_parts) == 3:
+                            # Check if the second part is a middle initial
+                            if re.fullmatch(r"[A-Z]\.", name_parts[1]):
+                                print(f'Found entity: {entity} ({label})')
+                                self.entities[entity] = (label, page['title'], page['link'])
+                        else:
+                            print(f'Found entity: {entity} ({label})')
+                            self.entities[entity] = (label, page['title'], page['link'])
 
     def post_process(self):
         results = {}
