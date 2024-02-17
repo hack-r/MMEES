@@ -12,13 +12,11 @@ A FOSS lead scraping tool developed by:
 
 https://github.com/hack-r
 
-Interested in the professional version or custom lead generation? Shoot me an email. hello@[my company name] .com
-
 NOTE: Serp API has a **free** plan - 100 searches/month, I believe. I don't work for them, but these engines change so much that if you build a traditional scraper today, it will likely be broken a next week or next month. This is a convenient solution and bypasses IP throttling as well.
 
 ## Description
 
-MMEES = Miller's Multi-Engine E-mail Scraper. A bit of a misnomer, as it now also scrapes phones, and names.
+MMEES = Miller's Multi-Engine E-mail Scraper. A bit of a misnomer, as it now also scrapes phones and names.
 
 This tool extracts emails, phone numbers, and named entities from search results across multiple search engines. It supports Baidu, Bing, DuckDuckGo, Google (with or without location), Naver, Yahoo, Yelp, Yandex.
 
@@ -65,7 +63,7 @@ Here are the available options:
 
 It is **HIGHLY recommended** to use the "-PP" option. Results are written in "long" format while the app is running. If it completes successfully with the "-PP" option enabled it will, among other things, attempt to transform the data set from long to wide. This is only somewhat possible as a single page may have multiple emails, phone numbers, and names, however you'll still end up with a shorter data set than the long version. Names tend to generate a lot of uninteresting matches, so I've limited it to those that appear to have a first and last name, with an optional middle initial. 
 
-If you're interested in other Spacy entity types it is a trivial edit to cut out the lines where I've removed them.
+If you're interested in other Spacy entity types it is a trivial edit to uncomment those lines.
 
 Storage of your Serp API key in a .env file is supported.
 
