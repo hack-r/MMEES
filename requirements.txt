@@ -3,4 +3,3 @@ google-search-results
 python-dotenv
 requests
 spacy
-.env
