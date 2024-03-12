@@ -1,5 +1,6 @@
 bs4
 google-search-results
+py-area-code-nanp
 python-dotenv
 requests
 spacy

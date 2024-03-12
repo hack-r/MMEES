@@ -43,23 +43,23 @@ python -m spacy download en_core_web_sm
 The script can be run from the command line with a number of arguments:
 
 ```
-python main.py -query "OpenAI" -pages 2 -o "openai_info.csv" -e "american" -PP -Ng
+python mmees.py -query "OpenAI" -pages 2 -o "openai_info.csv" -e "american" -PP -Ng
 ```
 
 Here are the available options:
 
+* `-e` : The search engine to use (default: "google"). Options are "google", "bing", "duckduckgo", "yahoo", "yandex", "baidu", "yelp", "naver", "glocation", "all", or "american". The "american" option includes all engines except Baidu, Naver, and Yandex. The "glocation" option uses Google Search by location, with Rockville, MD as the default location.
 * `-E` : Enable email scraping (default: True)
 * `-Eo` : Email only output
+* `-key` : Your Serp API key
 * `-N` : Enable named entity scraping (default: True)
 * `-Ng` : Exclude .gov emails
+* `-o` : Output filename (default: 'emails.csv')
 * `-P` : Enable phone number scraping (default: True)
 * `-PP` : Enable post-processing (lowercase and dedupe)
-* `-e` : The search engine to use (default: "google"). Options are "google", "bing", "duckduckgo", "yahoo", "yandex", "baidu", "yelp", "naver", "glocation", "all", or "american". The "american" option includes all engines except Baidu, Naver, and Yandex. The "glocation" option uses Google Search by location, with Rockville, MD as the default location.
-* `-key` : Your Serp API key
-* `-o` : Output filename (default: 'emails.csv')
 * `-pages` : Number of search results pages to scrape per engine (default: 2)
 * `-query` : The query to use for the search (default: 'test')
-
+* `-S` : Enable entity detection via SpaCy (make sure you have downloaded the model... see  Important Installation Note.txt). This option is not recommended and may require manual editing of mmees.py.
 
 It is **HIGHLY recommended** to use the "-PP" option. Results are written in "long" format while the app is running. If it completes successfully with the "-PP" option enabled it will, among other things, attempt to transform the data set from long to wide. This is only somewhat possible as a single page may have multiple emails, phone numbers, and names, however you'll still end up with a shorter data set than the long version. Names tend to generate a lot of uninteresting matches, so I've limited it to those that appear to have a first and last name, with an optional middle initial. 
 

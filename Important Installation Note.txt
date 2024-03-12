@@ -1,0 +1,5 @@
+You need to download the spacy model. This can't really be done in requirements.txt.
+
+Theoretically there is a way, but it doesn't work on a large number of environments. So just run:
+
+    python -m spacy download en_core_web_sm
