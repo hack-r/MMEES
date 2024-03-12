@@ -5,15 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c1da67c2-64ca-426d-927e-c623e255bc1e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Important Installation Note.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Important Installation Note.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example_run.txt" beforeDir="false" afterPath="$PROJECT_DIR$/example_run.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/helper.sh" beforeDir="false" afterPath="$PROJECT_DIR$/helper.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/mmees.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/processed_jason_scraped_these_leads_for_me_because_hes_awesome.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +100,7 @@
       <workItem from="1708138624745" duration="3141000" />
       <workItem from="1710202958586" duration="2455000" />
       <workItem from="1710205859805" duration="1283000" />
-      <workItem from="1710207227278" duration="837000" />
+      <workItem from="1710207227278" duration="1237000" />
     </task>
     <servers />
   </component>
