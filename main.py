@@ -4,6 +4,7 @@ import os
 import re
 import threading
 import urllib
+import pdb
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -38,7 +39,7 @@ area_codes = [
     906, 907, 908, 909, 910, 912, 913, 914, 915, 916, 917, 918, 919,
     920, 925, 928, 929, 930, 931, 934, 936, 937, 938, 940, 941, 947,
     949, 951, 952, 954, 956, 959, 970, 971, 972, 973, 978, 979, 980,
-    984, 985, 989
+    984, 985, 989, 215
 ]
 
 # Names filter
@@ -47,10 +48,13 @@ with open('first_names.txt', 'r') as file:
 
 # Main function
 class ScrapeProcess(object):
-    def __init__(self, filename, email_only, no_gov):
+    def __init__(self, filename, email_only, no_gov, indefinite):
         if os.path.isfile(filename):
             filename = f"{os.path.splitext(filename)[0]}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
         self.filename = filename
+        # Adding new values to be used for post processing
+        self.num_pages = -1
+        self.indefinite = indefinite
         self.email_only = email_only
         self.no_gov = no_gov
         self.csvfile = open(filename, 'w+')
@@ -72,6 +76,11 @@ class ScrapeProcess(object):
             "glocation": GoogleSearch
         }
         self.visited_pages = set()
+        # Overwriting post_processed file if pages is indefinite
+        if self.indefinite:
+            with open('processed_' + self.filename, 'w+') as f:
+                writer = csv.writer(f)
+                writer.writerow(['title', 'link', 'email', 'phone', 'entity'])
 
     def validate_email(self, email):
         email_regex = re.compile(r'[^@]+@[^@]+\.[^@]+')
@@ -109,41 +118,58 @@ class ScrapeProcess(object):
                 return
             self.scrape(query, pages, engine, serp_api_key)
 
+    """
+        For scraping indefinitely, running the loop forever until keyboard interrupt. Setting values for the same
+    """
     def scrape(self, query, num_pages, engine, api_key):
-        for i in range(num_pages):
-            params = {
-                "engine": engine,
-                "num": 100,
-                "api_key": api_key,
-                # 'async': True,  # for async requests
-            }
-            if engine == "bing":
-                params["cc"] = "US"
-            elif engine == "yahoo":
-                params["p"] = query
-                params["start"] = i * 100
-            elif engine == "yandex":
-                params["text"] = query
-            elif engine == "yelp":
-                params["find_desc"] = query
-            elif engine == "glocation":
-                try:
-                    location = GoogleSearch({}).get_location("Rockville, MD", 1)[0]["canonical_name"]
+        page_infinite = False
+        if type(num_pages) == str and num_pages == 'all':
+            print("Enter Ctrl-C or Ctrl-Z when satisfied")
+            
+            page_infinite = True
+            num_pages = 0
+        else:
+            num_pages = int(num_pages)
+        i = 0
+        try:
+            while ((i < num_pages) or page_infinite):
+                self.num_pages = i
+                params = {
+                    "engine": engine,
+                    "num": 100,
+                    "api_key": api_key,
+                    # 'async': True,  # for async requests
+                }
+                if engine == "bing":
+                    params["cc"] = "US"
+                elif engine == "yahoo":
+                    params["p"] = query
+                    params["start"] = i * 100
+                elif engine == "yandex":
+                    params["text"] = query
+                elif engine == "yelp":
+                    params["find_desc"] = query
+                elif engine == "glocation":
+                    try:
+                        location = GoogleSearch({}).get_location("Rockville, MD", 1)[0]["canonical_name"]
+                        params["q"] = query
+                        params["location"] = location
+                    except IndexError:
+                        print("Could not fetch location. Skipping...")
+                        location = None
+                else:
                     params["q"] = query
-                    params["location"] = location
-                except IndexError:
-                    print("Could not fetch location. Skipping...")
-                    location = None
-            else:
-                params["q"] = query
-                params["start"] = i * 100
-
-            search = self.search_engines[engine](params)
-            results = search.get_dict().get('organic_results', [])
-            print(f'Number of results: {len(results)}')
-            for page in results:
-                self.process_page(page)
-
+                    params["start"] = i * 100
+                search = self.search_engines[engine](params)
+                results = search.get_dict().get('organic_results', [])
+                print(f'Number of results: {len(results)}')
+                for page in results[:1]:
+                    self.process_page(page)
+                i += 1
+        except KeyboardInterrupt:
+            print("Ending Process. CSV Updated.")
+            raise "Exiting"
+               
     def process_page(self, page):
         if self.no_gov and ".gov" in page["link"]:
             print(f'Skipping .gov page: {page["link"]}')
@@ -161,7 +187,8 @@ class ScrapeProcess(object):
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text()
 
-        emails = re.findall(r'([A-Za-z0-9.\\+_-]+@[A-Za-z0-9\\._-]+\\.[a-zA-Z]*)', text)
+        # Changing regex pattern for emails
+        emails = re.findall(r'[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+', text)
         phones = re.findall(r'\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b', text)
 
         entities = {}
@@ -189,11 +216,11 @@ class ScrapeProcess(object):
                         if not any(pattern in email for pattern in exclude_patterns) and len(email.split('@')[0]) <= 15:
                             print(f'Found email: {email}')
                             self.emails[email] = (page['title'], page['link'])
-                            self.csvfile.flush()
+                            # self.csvfile.flush()
                     else:
                         print(f'Found email: {email}')
                         self.emails[email] = (page['title'], page['link'])
-                        self.csvfile.flush()
+                        # self.csvfile.flush()
                     # Spider the page:
                     self.spider_page(page['link'], urllib.parse.urlparse(page['link']).netloc)
 
@@ -202,11 +229,12 @@ class ScrapeProcess(object):
                 # Normalize phone to just digits
                 phone_digits = re.sub(r'\D', '', phone)
                 area_code = phone_digits[:3]
-                if area_code not in area_codes:
+                # Fixing area_code
+                if int(area_code) not in area_codes:
                     continue
                 print(f'Found phone: {phone}')
                 self.phones[phone] = (page['title'], page['link'])
-                self.csvfile.flush()
+                # self.csvfile.flush()
 
         if args.N:
             for entity, label in entities.items():
@@ -225,8 +253,11 @@ class ScrapeProcess(object):
                         else:
                             print(f'Found entity: {entity} ({label})')
                             self.entities[entity] = (label, page['title'], page['link'])
+        # Post processing after scraping a page immediately if num_pages is all
+        if self.indefinite:      
+            self.post_process()
 
-    def post_process(self):
+    def post_process(self, post_process = False):
         results = {}
         for email, (title, link) in self.emails.items():
             if link not in results:
@@ -241,15 +272,22 @@ class ScrapeProcess(object):
                 results[link] = {'title': title, 'email': [], 'phone': [], 'entity': []}
             results[link]['entity'].append((entity, label))
 
-        with open('processed_' + self.filename, 'w+') as f:
+        if post_process:
+            with open('processed_' + self.filename, 'w+') as f:
+                writer = csv.writer(f)
+                writer.writerow(['title', 'link', 'email', 'phone', 'entity'])
+        with open('processed_' + self.filename, 'a+') as f:
             writer = csv.writer(f)
-            writer.writerow(['title', 'link', 'email', 'phone', 'entity'])
             for link, data in results.items():
                 writer.writerow([data['title'], link, '; '.join(data['email']), '; '.join(data['phone']), '; '.join([f'{e} ({l})' for e, l in data['entity']])])
-
+        
         self.csvfile.close()
 
 
+"""
+    For all pages, the argument for -p must be 'all'. For example:
+        python3 main.py -query "apple" -o apple -pages all -e "google" -Ng
+"""
 parser = argparse.ArgumentParser(description='Scrape search results for leads')
 parser.add_argument('-E', action='store_true', default=True, help='Enable email scraping')
 parser.add_argument('-Eo', action='store_true', help='Email only output')
@@ -260,22 +298,31 @@ parser.add_argument('-PP', action='store_true', help='Enable post-processing (lo
 parser.add_argument('-e', '--engine', type=str, default="google", help="The search engine to use (google, bing, duckduckgo, yahoo, yandex, baidu, yelp, all)")
 parser.add_argument('-key', type=str, default=os.getenv('SERP_API_KEY'), help='Serp API key')
 parser.add_argument('-o', type=str, default='emails.csv', help='output filename')
-parser.add_argument('-pages', type=int, default=2, help='Number of search results pages to scrape per engine')
+parser.add_argument('-pages', default=2, help='Number of search results pages to scrape per engine')
 parser.add_argument('-query', type=str, default='test', help='A query to use for the search')
 
 args = parser.parse_args()
 args.o = args.o + '.csv' if '.csv' not in args.o else args.o
 
-s = ScrapeProcess(args.o, args.Eo, args.Ng)
+s = ScrapeProcess(args.o, args.Eo, args.Ng, args.pages == "all")
 if args.engine == "all":
     threads = []
-    for engine in s.search_engines:
-        t = threading.Thread(target=s.go, args=(args.query, args.pages, engine))
-        threads.append(t)
-        t.start()
-    for t in threads:
-        t.join()
+    try:
+        for engine in s.search_engines:
+            t = threading.Thread(target=s.go, args=(args.query, args.pages, engine))
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
+    except:
+        print("Not Waiting for all threads to join. Exiting.")
+        exit()
 else:
-    s.go(args.query, args.pages, args.engine)
-if args.PP:
-    s.post_process()
+    try:
+        s.go(args.query, args.pages, args.engine)
+    except:
+        print("Exiting")
+        exit()
+    
+if args.PP and args.pages != "all":
+    s.post_process(args.PP and args.pages != "all")
